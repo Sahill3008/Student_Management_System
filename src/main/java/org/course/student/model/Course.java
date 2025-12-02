@@ -18,6 +18,7 @@ public class Course {
 
     private String description;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @ManyToMany(mappedBy = "courses")
     private Set<Student> students = new HashSet<>();
 

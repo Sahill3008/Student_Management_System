@@ -1,7 +1,6 @@
 package org.course.student.controller;
 
 import org.course.student.dto.StudentDTO;
-import org.course.student.model.Student;
 import org.course.student.service.StudentService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,22 +16,27 @@ public class StudentController {
     }
 
     @PostMapping
-    public Student create(@RequestBody StudentDTO dto) {
-        return service.create(dto);
+    public StudentDTO create(@RequestBody StudentDTO dto) {
+        return service.createStudent(dto);
+    }
+
+    @GetMapping
+    public org.springframework.data.domain.Page<StudentDTO> getAll(org.springframework.data.domain.Pageable pageable) {
+        return service.getAllStudents(pageable);
     }
 
     @GetMapping("/{id}")
-    public Student get(@PathVariable Long id) {
-        return service.getById(id);
+    public StudentDTO get(@PathVariable Long id) {
+        return service.getStudentById(id);
     }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
-        service.delete(id);
+        service.deleteStudent(id);
     }
 
     @PostMapping("/{id}/courses/{cid}")
-    public Student addCourse(@PathVariable Long id, @PathVariable Long cid) {
+    public StudentDTO addCourse(@PathVariable Long id, @PathVariable Long cid) {
         return service.addCourse(id, cid);
     }
 }

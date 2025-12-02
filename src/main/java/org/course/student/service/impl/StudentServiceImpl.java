@@ -19,6 +19,9 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.course.student.model.Department;
+import org.course.student.repository.DepartmentRepository;
+
 @Service
 public class StudentServiceImpl implements StudentService {
 
@@ -28,12 +31,19 @@ public class StudentServiceImpl implements StudentService {
     @Autowired
     private CourseRepository courseRepo;
 
+    @Autowired
+    private DepartmentRepository deptRepo;
+
     private StudentDTO toDTO(Student s) {
         StudentDTO dto = new StudentDTO();
         dto.setId(s.getId());
         dto.setName(s.getName());
         dto.setEmail(s.getEmail());
         dto.setAge(s.getAge());
+        
+        if (s.getDepartment() != null) {
+            dto.setDepartmentId(s.getDepartment().getId());
+        }
 
         dto.setCourseIds(
                 s.getCourses().stream()
@@ -48,6 +58,12 @@ public class StudentServiceImpl implements StudentService {
         s.setName(dto.getName());
         s.setEmail(dto.getEmail());
         s.setAge(dto.getAge());
+
+        if (dto.getDepartmentId() != null) {
+            Department d = deptRepo.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Department not found: " + dto.getDepartmentId()));
+            s.setDepartment(d);
+        }
 
         if (dto.getCourseIds() != null) {
             Set<Course> courses = new HashSet<>(courseRepo.findAllById(dto.getCourseIds()));
@@ -85,6 +101,14 @@ public class StudentServiceImpl implements StudentService {
         s.setName(dto.getName());
         s.setEmail(dto.getEmail());
         s.setAge(dto.getAge());
+
+        if (dto.getDepartmentId() != null) {
+            Department d = deptRepo.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Department not found: " + dto.getDepartmentId()));
+            s.setDepartment(d);
+        } else {
+            s.setDepartment(null);
+        }
 
         if (dto.getCourseIds() != null) {
             Set<Course> courses = new HashSet<>(courseRepo.findAllById(dto.getCourseIds()));

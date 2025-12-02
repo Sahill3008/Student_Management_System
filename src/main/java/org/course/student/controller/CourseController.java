@@ -1,7 +1,6 @@
 package org.course.student.controller;
 
 import org.course.student.dto.CourseDTO;
-import org.course.student.model.Course;
 import org.course.student.service.CourseService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,7 +16,27 @@ public class CourseController {
     }
 
     @PostMapping
-    public Course create(@RequestBody CourseDTO dto) {
-        return service.create(dto);
+    public CourseDTO create(@RequestBody CourseDTO dto) {
+        return service.createCourse(dto);
+    }
+
+    @GetMapping
+    public java.util.List<CourseDTO> getAll() {
+        return service.getAllCourses();
+    }
+
+    @GetMapping("/{id}")
+    public CourseDTO get(@PathVariable Long id) {
+        return service.getCourseById(id);
+    }
+
+    @PutMapping("/{id}")
+    public CourseDTO update(@PathVariable Long id, @RequestBody CourseDTO dto) {
+        return service.updateCourse(id, dto);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        service.deleteCourse(id);
     }
 }

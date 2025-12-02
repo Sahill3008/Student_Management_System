@@ -7,6 +7,7 @@ public class StudentDTO {
     private String name;
     private String email;
     private Integer age;
+    private Long departmentId;
     private List<Long> courseIds;
 
     public Long getId() {
@@ -39,6 +40,14 @@ public class StudentDTO {
 
     public void setAge(Integer age) {
         this.age = age;
+    }
+
+    public Long getDepartmentId() {
+        return departmentId;
+    }
+
+    public void setDepartmentId(Long departmentId) {
+        this.departmentId = departmentId;
     }
 
     public List<Long> getCourseIds() {

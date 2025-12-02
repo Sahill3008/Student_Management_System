@@ -15,12 +15,25 @@ public class StudentProfile {
     @Embedded
     private Address address;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
+    @OneToOne
+    @JoinColumn(name = "student_id")
+    private Student student;
+
     public StudentProfile() {
     }
 
     public StudentProfile(String bio, Address address) {
         this.bio = bio;
         this.address = address;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
     }
 
     // Getters & Setters

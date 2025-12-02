@@ -3,6 +3,7 @@ package org.course.student.dto;
 public class StudentProfileDTO {
 
     private String bio;
+    private Long studentId;
     private String street;
     private String city;
     private String state;
@@ -14,6 +15,14 @@ public class StudentProfileDTO {
 
     public void setBio(String bio) {
         this.bio = bio;
+    }
+
+    public Long getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
     }
 
     public String getStreet() {

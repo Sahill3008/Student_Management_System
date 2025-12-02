@@ -15,6 +15,7 @@ public class Department {
 
     private String deptName;
 
+    @com.fasterxml.jackson.annotation.JsonIgnore
     @OneToMany(mappedBy = "department")
     private List<Student> students = new ArrayList<>();
 
@@ -48,5 +49,5 @@ public class Department {
     public void setStudents(List<Student> students) {
         this.students = students;
     }
-// Getters & Setters
+    // Getters & Setters
 }

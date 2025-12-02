@@ -30,4 +30,31 @@ public class CourseMaterialService {
 
         return repo.save(material);
     }
+
+    public java.util.List<CourseMaterial> getAll() {
+        return repo.findAll();
+    }
+
+    public CourseMaterial getById(Long id) {
+        return repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("CourseMaterial not found"));
+    }
+
+    public CourseMaterial update(Long id, CourseMaterialDTO dto) {
+        CourseMaterial material = getById(id);
+        material.setTitle(dto.getTitle());
+        material.setResourceLink(dto.getResourceLink());
+
+        if (dto.getCourseId() != null) {
+            Course course = courseRepo.findById(dto.getCourseId())
+                    .orElseThrow(() -> new RuntimeException("Course not found"));
+            material.setCourse(course);
+        }
+
+        return repo.save(material);
+    }
+
+    public void delete(Long id) {
+        repo.deleteById(id);
+    }
 }
