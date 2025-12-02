@@ -2,6 +2,7 @@ package org.course.student.controller;
 
 import org.course.student.dto.CourseDTO;
 import org.course.student.service.CourseService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -38,5 +39,13 @@ public class CourseController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {
         service.deleteCourse(id);
+    }
+
+    @Autowired
+    private org.course.student.service.EnrollmentService enrollmentService;
+
+    @GetMapping("/{id}/students")
+    public java.util.List<org.course.student.dto.EnrollmentDTO> getEnrollments(@PathVariable Long id) {
+        return enrollmentService.getEnrollmentsByCourse(id);
     }
 }

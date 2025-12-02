@@ -18,11 +18,8 @@ public class Student {
 
     private Integer age;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE})
-    @JoinTable(name = "student_courses",
-            joinColumns = @JoinColumn(name = "student_id"),
-            inverseJoinColumns = @JoinColumn(name = "course_id"))
-    private java.util.Set<Course> courses = new java.util.HashSet<>();
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private java.util.Set<Enrollment> enrollments = new java.util.HashSet<>();
 
     @OneToOne(mappedBy = "student", cascade = CascadeType.ALL)
     private StudentProfile studentProfile;
@@ -72,12 +69,12 @@ public class Student {
         this.age = age;
     }
 
-    public java.util.Set<Course> getCourses() {
-        return courses;
+    public java.util.Set<Enrollment> getEnrollments() {
+        return enrollments;
     }
 
-    public void setCourses(java.util.Set<Course> courses) {
-        this.courses = courses;
+    public void setEnrollments(java.util.Set<Enrollment> enrollments) {
+        this.enrollments = enrollments;
     }
 
     public StudentProfile getStudentProfile() {

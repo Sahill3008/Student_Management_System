@@ -18,9 +18,12 @@ public class Course {
 
     private String description;
 
-    @com.fasterxml.jackson.annotation.JsonIgnore
-    @ManyToMany(mappedBy = "courses")
-    private Set<Student> students = new HashSet<>();
+    @OneToMany(mappedBy = "course", cascade = CascadeType.ALL)
+    private Set<Enrollment> enrollments = new HashSet<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "instructor_id")
+    private Instructor instructor;
 
     public Long getId() {
         return id;
@@ -46,11 +49,19 @@ public class Course {
         this.description = description;
     }
 
-    public Set<Student> getStudents() {
-        return students;
+    public Set<Enrollment> getEnrollments() {
+        return enrollments;
     }
 
-    public void setStudents(Set<Student> students) {
-        this.students = students;
+    public void setEnrollments(Set<Enrollment> enrollments) {
+        this.enrollments = enrollments;
+    }
+
+    public Instructor getInstructor() {
+        return instructor;
+    }
+
+    public void setInstructor(Instructor instructor) {
+        this.instructor = instructor;
     }
 }

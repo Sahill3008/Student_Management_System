@@ -2,6 +2,7 @@ package org.course.student.controller;
 
 import org.course.student.dto.StudentDTO;
 import org.course.student.service.StudentService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -35,8 +36,4 @@ public class StudentController {
         service.deleteStudent(id);
     }
 
-    @PostMapping("/{id}/courses/{cid}")
-    public StudentDTO addCourse(@PathVariable Long id, @PathVariable Long cid) {
-        return service.addCourse(id, cid);
-    }
 }

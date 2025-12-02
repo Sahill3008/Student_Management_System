@@ -1,215 +1,197 @@
-import React, { useEffect, useState } from 'react';
-import api from '../services/api';
-import Modal from '../components/Modal';
-import { Plus, Pencil, Trash2, Search } from 'lucide-react';
+import React, { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import api from '../api';
+import { Plus, BookOpen, User } from 'lucide-react';
+
+const assignSchema = z.object({
+    courseId: z.string().min(1, 'Course is required'),
+    semester: z.string().min(1, 'Semester is required'),
+});
 
 const Students = () => {
-    const [students, setStudents] = useState([]);
-    const [departments, setDepartments] = useState([]);
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingStudent, setEditingStudent] = useState(null);
-    const [formData, setFormData] = useState({ name: '', email: '', age: '', departmentId: '' });
+    const queryClient = useQueryClient();
+    const [selectedStudent, setSelectedStudent] = useState(null);
+    const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
+    const [viewEnrollmentsStudent, setViewEnrollmentsStudent] = useState(null);
 
-    const fetchStudents = async () => {
-        try {
-            const res = await api.get('/students');
-            // Handle Page<StudentDTO> response
-            setStudents(res.data.content || res.data);
-        } catch (error) {
-            console.error('Error fetching students:', error);
-        }
+    const { data: students, isLoading } = useQuery({
+        queryKey: ['students'],
+        queryFn: async () => {
+            const response = await api.get('/students');
+            return response.data.content;
+        },
+    });
+
+    const { data: courses } = useQuery({
+        queryKey: ['courses'],
+        queryFn: async () => {
+            const response = await api.get('/courses');
+            return response.data;
+        },
+    });
+
+    const { data: studentEnrollments } = useQuery({
+        queryKey: ['studentEnrollments', viewEnrollmentsStudent?.id],
+        queryFn: async () => {
+            const response = await api.get(`/students/${viewEnrollmentsStudent.id}/courses`);
+            return response.data;
+        },
+        enabled: !!viewEnrollmentsStudent,
+    });
+
+    const assignMutation = useMutation({
+        mutationFn: async (data) => {
+            await api.post(`/students/${selectedStudent.id}/courses/${data.courseId}?semester=${data.semester}`);
+        },
+        onSuccess: () => {
+            setIsAssignModalOpen(false);
+            setSelectedStudent(null);
+            alert('Course assigned successfully');
+        },
+        onError: (error) => {
+            console.error(error);
+            alert('Failed to assign course');
+        },
+    });
+
+    const { register, handleSubmit, formState: { errors }, reset } = useForm({
+        resolver: zodResolver(assignSchema),
+    });
+
+    const openAssignModal = (student) => {
+        setSelectedStudent(student);
+        setIsAssignModalOpen(true);
+        reset();
     };
 
-    const fetchDepartments = async () => {
-        try {
-            const res = await api.get('/departments');
-            setDepartments(res.data);
-        } catch (error) {
-            console.error('Error fetching departments:', error);
-        }
+    const onAssignSubmit = (data) => {
+        assignMutation.mutate(data);
     };
 
-    useEffect(() => {
-        fetchStudents();
-        fetchDepartments();
-    }, []);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        try {
-            if (editingStudent) {
-                await api.put(`/students/${editingStudent.id}`, formData);
-            } else {
-                await api.post('/students', formData);
-            }
-            setIsModalOpen(false);
-            setEditingStudent(null);
-            setFormData({ name: '', email: '', age: '', departmentId: '' });
-            fetchStudents();
-        } catch (error) {
-            console.error('Error saving student:', error);
-            alert('Error saving student. Please check inputs.');
-        }
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this student?')) {
-            try {
-                await api.delete(`/students/${id}`);
-                fetchStudents();
-            } catch (error) {
-                console.error('Error deleting student:', error);
-            }
-        }
-    };
-
-    const openEdit = (student) => {
-        setEditingStudent(student);
-        setFormData({
-            name: student.name,
-            email: student.email,
-            age: student.age,
-            departmentId: student.departmentId || ''
-        });
-        setIsModalOpen(true);
-    };
+    if (isLoading) return <div>Loading...</div>;
 
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-bold text-gray-900">Students</h1>
-                <button
-                    onClick={() => {
-                        setEditingStudent(null);
-                        setFormData({ name: '', email: '', age: '', departmentId: '' });
-                        setIsModalOpen(true);
-                    }}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                >
-                    <Plus className="h-4 w-4" />
-                    Add Student
-                </button>
+            <div className="flex justify-between items-center">
+                <h2 className="text-2xl font-bold text-gray-900">Students</h2>
+                {/* Add Create Student Button here if needed */}
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                        <tr>
-                            <th className="px-6 py-4 font-medium text-gray-500">Name</th>
-                            <th className="px-6 py-4 font-medium text-gray-500">Email</th>
-                            <th className="px-6 py-4 font-medium text-gray-500">Age</th>
-                            <th className="px-6 py-4 font-medium text-gray-500">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-200">
-                        {Array.isArray(students) && students.map((student) => (
-                            <tr key={student.id} className="hover:bg-gray-50">
-                                <td className="px-6 py-4 font-medium text-gray-900">{student.name}</td>
-                                <td className="px-6 py-4 text-gray-600">{student.email}</td>
-                                <td className="px-6 py-4 text-gray-600">{student.age}</td>
-                                <td className="px-6 py-4">
-                                    <div className="flex items-center gap-3">
-                                        <button
-                                            onClick={() => openEdit(student)}
-                                            className="text-indigo-600 hover:text-indigo-700"
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(student.id)}
-                                            className="text-red-600 hover:text-red-700"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        {students.length === 0 && (
-                            <tr>
-                                <td colSpan="4" className="px-6 py-8 text-center text-gray-500">
-                                    No students found. Add one to get started.
-                                </td>
-                            </tr>
-                        )}
-                    </tbody>
-                </table>
+            <div className="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul className="divide-y divide-gray-200">
+                    {students?.map((student) => (
+                        <li key={student.id} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
+                            <div>
+                                <div className="text-sm font-medium text-indigo-600">{student.name}</div>
+                                <div className="text-sm text-gray-500">{student.email}</div>
+                            </div>
+                            <div className="flex space-x-4">
+                                <button
+                                    onClick={() => setViewEnrollmentsStudent(student)}
+                                    className="text-gray-400 hover:text-gray-500"
+                                    title="View Courses"
+                                >
+                                    <BookOpen className="h-5 w-5" />
+                                </button>
+                                <button
+                                    onClick={() => openAssignModal(student)}
+                                    className="text-indigo-600 hover:text-indigo-900"
+                                    title="Assign Course"
+                                >
+                                    <Plus className="h-5 w-5" />
+                                </button>
+                            </div>
+                        </li>
+                    ))}
+                </ul>
             </div>
 
-            <Modal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                title={editingStudent ? 'Edit Student' : 'Add New Student'}
-            >
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
-                        <input
-                            type="text"
-                            required
-                            value={formData.name}
-                            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                            placeholder="John Doe"
-                        />
+            {/* Assign Course Modal */}
+            {isAssignModalOpen && (
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg max-w-md w-full p-6">
+                        <h3 className="text-lg font-medium mb-4">Assign Course to {selectedStudent?.name}</h3>
+                        <form onSubmit={handleSubmit(onAssignSubmit)} className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Course</label>
+                                <select
+                                    {...register('courseId')}
+                                    className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                                >
+                                    <option value="">Select a course</option>
+                                    {courses?.map((course) => (
+                                        <option key={course.id} value={course.id}>{course.courseName}</option>
+                                    ))}
+                                </select>
+                                {errors.courseId && <p className="text-red-500 text-xs mt-1">{errors.courseId.message}</p>}
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700">Semester</label>
+                                <input
+                                    type="text"
+                                    {...register('semester')}
+                                    className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                />
+                                {errors.semester && <p className="text-red-500 text-xs mt-1">{errors.semester.message}</p>}
+                            </div>
+                            <div className="flex justify-end space-x-3">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsAssignModalOpen(false)}
+                                    className="bg-white py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
+                                >
+                                    Assign
+                                </button>
+                            </div>
+                        </form>
                     </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-                        <input
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                            placeholder="john@example.com"
-                        />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Age</label>
-                            <input
-                                type="number"
-                                required
-                                min="1"
-                                max="120"
-                                value={formData.age}
-                                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                            />
+                </div>
+            )}
+
+            {/* View Enrollments Modal */}
+            {viewEnrollmentsStudent && (
+                <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center p-4">
+                    <div className="bg-white rounded-lg max-w-lg w-full p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-lg font-medium">Courses for {viewEnrollmentsStudent.name}</h3>
+                            <button onClick={() => setViewEnrollmentsStudent(null)} className="text-gray-400 hover:text-gray-500">
+                                <span className="sr-only">Close</span>
+                                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            </button>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
-                            <select
-                                value={formData.departmentId}
-                                onChange={(e) => setFormData({ ...formData, departmentId: e.target.value })}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                            >
-                                <option value="">Select Dept</option>
-                                {departments.map((dept) => (
-                                    <option key={dept.id} value={dept.id}>
-                                        {dept.deptName}
-                                    </option>
-                                ))}
-                            </select>
+                        <div className="mt-2">
+                            {studentEnrollments?.length > 0 ? (
+                                <ul className="divide-y divide-gray-200">
+                                    {studentEnrollments.map((enrollment) => (
+                                        <li key={enrollment.id} className="py-3 flex justify-between">
+                                            <div>
+                                                <p className="text-sm font-medium text-gray-900">{enrollment.courseName}</p>
+                                                <p className="text-sm text-gray-500">{enrollment.semester}</p>
+                                            </div>
+                                            <div className="text-sm text-gray-500">
+                                                Grade: {enrollment.grade || 'N/A'}
+                                            </div>
+                                        </li>
+                                    ))}
+                                </ul>
+                            ) : (
+                                <p className="text-sm text-gray-500">No courses enrolled.</p>
+                            )}
                         </div>
                     </div>
-                    <div className="flex justify-end gap-3 mt-6">
-                        <button
-                            type="button"
-                            onClick={() => setIsModalOpen(false)}
-                            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-                        >
-                            Cancel
-                        </button>
-                        <button
-                            type="submit"
-                            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
-                        >
-                            {editingStudent ? 'Save Changes' : 'Create Student'}
-                        </button>
-                    </div>
-                </form>
-            </Modal>
+                </div>
+            )}
         </div>
     );
 };

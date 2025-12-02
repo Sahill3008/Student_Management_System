@@ -1,6 +1,6 @@
 package org.course.student.dto;
 
-import java.util.List;
+import java.util.Set;
 
 public class StudentDTO {
     private Long id;
@@ -8,7 +8,8 @@ public class StudentDTO {
     private String email;
     private Integer age;
     private Long departmentId;
-    private List<Long> courseIds;
+    private String departmentName;
+    private Set<EnrollmentDTO> enrollments;
 
     public Long getId() {
         return id;
@@ -50,11 +51,19 @@ public class StudentDTO {
         this.departmentId = departmentId;
     }
 
-    public List<Long> getCourseIds() {
-        return courseIds;
+    public String getDepartmentName() {
+        return departmentName;
     }
 
-    public void setCourseIds(List<Long> courseIds) {
-        this.courseIds = courseIds;
+    public void setDepartmentName(String departmentName) {
+        this.departmentName = departmentName;
+    }
+
+    public Set<EnrollmentDTO> getEnrollments() {
+        return enrollments;
+    }
+
+    public void setEnrollments(Set<EnrollmentDTO> enrollments) {
+        this.enrollments = enrollments;
     }
 }
