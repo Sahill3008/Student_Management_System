@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Student</title>
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+<h2>Add Student</h2>
+<form id="studentForm">
+    <input id="name" placeholder="Name" required type="text"><br>
+    <input id="email" placeholder="Email" required type="email"><br>
+    <input id="age" placeholder="Age" required type="number"><br>
+    <button type="submit">Submit</button>
+</form>
+
+<script>
+    document.getElementById("studentForm").addEventListener("submit", async function (e) {
+        e.preventDefault();
+
+        const data = {
+            name: document.getElementById("name").value,
+            email: document.getElementById("email").value,
+            age: document.getElementById("age").value
+        };
+
+        const res = await fetch("/students", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(data)
+        });
+
+        const out = await res.json();
+        alert(JSON.stringify(out));
+    });
+</script>
+</body>
+</html>

@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Delete Student</title>
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<h2>Delete Student</h2>
+
+<select id="studentSelect"></select>
+<button onclick="deleteStudent()">Delete</button>
+
+<script>
+    async function loadStudents() {
+        const res = await fetch("/students");
+        const data = await res.json();
+        const select = document.getElementById("studentSelect");
+
+        data.content.forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s.id;
+            opt.textContent = s.name + " (" + s.email + ")";
+            select.appendChild(opt);
+        });
+    }
+
+    async function deleteStudent() {
+        const id = document.getElementById("studentSelect").value;
+
+        const res = await fetch(`/students/${id}`, {
+            method: "DELETE"
+        });
+
+        if (res.ok) {
+            alert("Student deleted!");
+            location.reload();
+        } else {
+            alert("Cannot delete student.");
+        }
+    }
+
+    loadStudents();
+</script>
+
+</body>
+</html>

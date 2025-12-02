@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Course Material</title>
+    <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<h2>Add Course Material</h2>
+
+<select id="courseSelect"></select>
+<br><br>
+
+<input id="title" placeholder="Material Title"><br>
+<input id="link" placeholder="Resource Link (URL)"><br>
+
+<button onclick="saveMaterial()">Save</button>
+
+<script>
+    async function loadCourses() {
+        const res = await fetch("/courses");
+        const data = await res.json();
+
+        const select = document.getElementById("courseSelect");
+
+        data.forEach(c => {
+            const opt = document.createElement("option");
+            opt.value = c.id;
+            opt.textContent = c.courseName;
+            select.appendChild(opt);
+        });
+    }
+
+    async function saveMaterial() {
+        const body = {
+            courseId: document.getElementById("courseSelect").value,
+            title: document.getElementById("title").value,
+            resourceLink: document.getElementById("link").value
+        };
+
+        if (!body.title.trim()) return alert("Title is required");
+        if (!body.resourceLink.trim()) return alert("Link is required");
+
+        const res = await fetch("/materials", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify(body)
+        });
+
+        if (res.ok) {
+            alert("Material added!");
+            document.getElementById("title").value = "";
+            document.getElementById("link").value = "";
+        } else {
+            alert("Error adding material");
+        }
+    }
+
+    loadCourses();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Student Profile</title>
+    <link href="/css/style.css" rel="stylesheet">
+    <style>
+        .profile-box, .course-box {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Student Profile</h2>
+
+<select id="studentSelect" onchange="loadProfile()"></select>
+
+<div id="profile"></div>
+
+<script>
+    async function loadStudents() {
+        const res = await fetch("/students");
+        const data = await res.json();
+
+        const select = document.getElementById("studentSelect");
+
+        data.content.forEach(s => {
+            const opt = document.createElement("option");
+            opt.value = s.id;
+            opt.textContent = s.name;
+            select.appendChild(opt);
+        });
+    }
+
+    async function loadProfile() {
+        const id = document.getElementById("studentSelect").value;
+
+        const res = await fetch(`/students/${id}`);
+        const s = await res.json();
+
+        const courses = await fetch("/courses").then(r => r.json());
+        const materials = await fetch("/materials").then(r => r.json());
+
+        let html = `
+        <div class="profile-box">
+            <h3>${s.name}</h3>
+            <p><strong>Email:</strong> ${s.email}</p>
+            <p><strong>Age:</strong> ${s.age}</p>
+            <p><strong>Department:</strong> ${s.departmentName || 'None'}</p>
+            <h4>Profile</h4>
+            <p><strong>Bio:</strong> ${s.bio || "N/A"}</p>
+            <p><strong>Address:</strong> ${s.address || "N/A"}</p>
+        </div>
+
+        <h3>Enrolled Courses</h3>
+    `;
+
+        // COURSES
+        courses.forEach(c => {
+            if (s.courseIds.includes(c.id)) {
+                html += `
+                <div class="course-box">
+                    <h4>${c.courseName}</h4>
+                    <p>${c.description}</p>
+                    <strong>Materials:</strong>
+                    <ul>
+            `;
+
+                materials.forEach(m => {
+                    if (m.courseId === c.id) {
+                        html += `<li><a href="${m.resourceLink}" target="_blank">${m.title}</a></li>`;
+                    }
+                });
+
+                html += `
+                    </ul>
+                </div>
+            `;
+            }
+        });
+
+        document.getElementById("profile").innerHTML = html;
+    }
+
+    loadStudents();
+</script>
+
+</body>
+</html>
