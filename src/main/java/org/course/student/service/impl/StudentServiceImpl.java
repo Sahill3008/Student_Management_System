@@ -23,13 +23,13 @@ public class StudentServiceImpl implements StudentService {
 
     private final StudentRepository studentRepo;
     private final DepartmentRepository deptRepo;
-    private final StudentMapper studentMapper;
 
-    public StudentServiceImpl(StudentRepository studentRepo, DepartmentRepository deptRepo,
-            StudentMapper studentMapper) {
+    @org.springframework.beans.factory.annotation.Autowired
+    private StudentMapper studentMapper;
+
+    public StudentServiceImpl(StudentRepository studentRepo, DepartmentRepository deptRepo) {
         this.studentRepo = studentRepo;
         this.deptRepo = deptRepo;
-        this.studentMapper = studentMapper;
     }
 
     @Override
